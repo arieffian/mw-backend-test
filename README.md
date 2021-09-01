@@ -75,3 +75,20 @@ $ docker-compose up
 ```bash
 $ go test
 ``` 
+
+## Calling API##
+```bash
+$ curl -X POST -H 'content-type: application/json' --data '{"name": "acer"}' http://localhost:8080/brand
+``` 
+
+```bash
+$ curl http://localhost:8080/product?id=1
+``` 
+
+```bash
+$ curl -X POST -H 'content-type: application/json' --data '{"brand_id": 4, "name": "predator", "qty": 3, "price": 1050}' http://localhost:8080/product
+``` 
+
+```bash
+$ curl http://localhost:8080/product/brand?id=1
+``` 

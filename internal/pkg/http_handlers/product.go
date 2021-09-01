@@ -1,12 +1,16 @@
 package http_handlers
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strconv"
 
 	"github.com/arieffian/mw-backend-test/internal/connectors"
+	"github.com/arieffian/mw-backend-test/internal/constants/response"
 	"github.com/arieffian/mw-backend-test/pkg/helpers"
+	"github.com/go-playground/validator"
 )
 
 var (
@@ -39,7 +43,58 @@ func (p *ProductHandler) ProductHttpHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func (b *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
-	helpers.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Create Product", nil, nil, nil)
+	product := &productRequest{}
+
+	//Unmarshal json
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		errJSON := &helpers.ErrorJSON{
+			Message:      "Error when parse Body request",
+			Reason:       "internal_error",
+			ErrTittleMsg: "Error parsing request",
+			ErrBodyMsg:   response.Get("general", http.StatusInternalServerError, ""),
+		}
+		helpers.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, "", nil, nil, errJSON)
+		return
+	}
+
+	err = json.Unmarshal(body, &product)
+	if err != nil {
+		helpers.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, "Error processing request", nil, nil, nil)
+		return
+	}
+
+	//validate json input
+	validate = validator.New()
+	err = validate.Struct(product)
+	if err != nil {
+		helpers.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, "Invalid json structure", nil, nil, nil)
+		return
+	}
+
+	//validate brand id exists
+	_, err = BrandRepo.GetBrandByID(r.Context(), product.BrandID)
+	if err != nil {
+		helpers.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, "Brand ID not found", nil, nil, nil)
+		return
+	}
+
+	pRecord := &connectors.ProductRecord{
+		BrandID: product.BrandID,
+		Name:    product.Name,
+		Qty:     product.Qty,
+		Price:   product.Price,
+	}
+
+	// insert to database
+	result, err := ProductRepo.CreateProduct(r.Context(), pRecord)
+
+	if err != nil {
+		helpers.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, "Internal server error", nil, nil, nil)
+		return
+	}
+
+	helpers.WriteHTTPResponse(r.Context(), w, http.StatusOK, result, nil, nil, nil)
 }
 
 func (b *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) {

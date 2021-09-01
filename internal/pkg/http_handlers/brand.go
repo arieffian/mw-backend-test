@@ -66,6 +66,7 @@ func (b *BrandHandler) CreateBrand(w http.ResponseWriter, r *http.Request) {
 		Name: brand.Name,
 	}
 
+	// insert to database
 	result, err := BrandRepo.CreateBrand(r.Context(), bRecord)
 
 	if err != nil {
