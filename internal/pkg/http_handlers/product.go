@@ -125,5 +125,34 @@ func (b *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) 
 }
 
 func (b *ProductHandler) GetProductByBrandID(w http.ResponseWriter, r *http.Request) {
-	helpers.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Get Product By Brand ID", nil, nil, nil)
+	query := r.URL.Query()
+
+	//check if id present and greater than 0
+	sID := query.Get("id")
+	if sID == "" {
+		helpers.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, "Parameter ID not found", nil, nil, nil)
+		return
+	}
+
+	//check if id is number or not
+	id, err := strconv.Atoi(sID)
+	if err != nil {
+		helpers.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, "Parameter ID is not numeric", nil, nil, nil)
+		return
+	}
+
+	//validate brand id exists
+	_, err = BrandRepo.GetBrandByID(r.Context(), id)
+	if err != nil {
+		helpers.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, "Brand ID not found", nil, nil, nil)
+		return
+	}
+
+	products, err := ProductRepo.GetProductByBrandID(r.Context(), id)
+	if err != nil {
+		helpers.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, "Error fetching the product", nil, nil, nil)
+		return
+	}
+
+	helpers.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Success", nil, products, nil)
 }
