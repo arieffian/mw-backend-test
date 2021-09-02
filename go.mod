@@ -8,7 +8,7 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/hyperjumptech/acccore v1.0.4 // indirect
-	github.com/hyperjumptech/hansip v1.0.0 // indirect
+	github.com/hyperjumptech/hansip v1.0.0
 	github.com/jmoiron/sqlx v1.3.4 // indirect
 	// github.com/gorilla/mux v1.8.0
 	github.com/jonboulle/clockwork v0.2.2 // indirect
