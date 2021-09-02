@@ -1,4 +1,4 @@
-package http_handlers
+package api
 
 import (
 	"encoding/json"
@@ -13,12 +13,7 @@ import (
 	"github.com/go-playground/validator"
 )
 
-var (
-	ProductRepo connectors.ProductRepository
-
-	productRegExp      = regexp.MustCompile(`^\/product[\/]*$`)
-	productBrandRegExp = regexp.MustCompile(`^\/product\/brand[\/]*$`)
-)
+type ProductHandler struct{}
 
 type productRequest struct {
 	BrandID int    `json:"brand_id" validate:"required,numeric,gt=0"`
@@ -26,7 +21,13 @@ type productRequest struct {
 	Qty     int    `json:"qty" validate:"required,numeric,gte=0"`
 	Price   int    `json:"price" validate:"required,numeric,gte=0"`
 }
-type ProductHandler struct{}
+
+var (
+	ProductRepo connectors.ProductRepository
+
+	productRegExp      = regexp.MustCompile(`^\/product[\/]*$`)
+	productBrandRegExp = regexp.MustCompile(`^\/product\/brand[\/]*$`)
+)
 
 func (p *ProductHandler) ProductHttpHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
@@ -97,7 +98,7 @@ func (b *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	helpers.WriteHTTPResponse(r.Context(), w, http.StatusOK, result, nil, nil, nil)
 }
 
-func (b *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) {
+func (p *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 
 	//check if id present and greater than 0
@@ -124,7 +125,7 @@ func (b *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) 
 	helpers.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Success", nil, product, nil)
 }
 
-func (b *ProductHandler) GetProductByBrandID(w http.ResponseWriter, r *http.Request) {
+func (p *ProductHandler) GetProductByBrandID(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 
 	//check if id present and greater than 0

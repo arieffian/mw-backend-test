@@ -28,7 +28,7 @@ type ErrorJSON struct {
 // headerMap and data argument are both optional
 func WriteHTTPResponse(ctx context.Context, w http.ResponseWriter, httpRespCode int, message string, headerMap map[string]string, data interface{}, errors *ErrorJSON) {
 	w.Header().Add("Content-Type", "application/json")
-
+	w.WriteHeader(httpRespCode)
 	for k, v := range headerMap {
 		w.Header().Add(k, v)
 	}

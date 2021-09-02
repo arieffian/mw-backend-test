@@ -119,10 +119,55 @@ func (db *MySQLDB) GetProductByBrandID(ctx context.Context, brandID int) ([]*Pro
 
 // GetTransactionByTransactionID retrieves the detail of a transaction from database where the transaction id is specified.
 func (db *MySQLDB) GetTransactionByTransactionID(ctx context.Context, transactionID int) (*TransactionRecord, error) {
-	return nil, nil
+	fLog := mysqlLog.WithField("func", "GetTransactionByTransactionID")
+	transaction := &TransactionRecord{}
+
+	row := db.instance.QueryRowContext(ctx, "SELECT id, user_id, date, grand_total FROM transactions WHERE id = ?", transactionID)
+	err := row.Scan(&transaction.ID, &transaction.UserID, &transaction.Date, &transaction.GrandTotal)
+	if err != nil {
+		fLog.Errorf("row.Scan got %s", err.Error())
+		return nil, err
+	}
+
+	q := fmt.Sprintf("SELECT transaction_id, product_id, qty, sub_total FROM transaction_detail WHERE transaction_id = %v", transactionID)
+	rows, err := db.instance.QueryContext(ctx, q)
+	if err != nil {
+		fLog.Errorf("db.instance.QueryContext got %s", err.Error())
+		return nil, err
+	}
+
+	tDetail := make([]*TransactionDetailRecord, 0)
+	for rows.Next() {
+		tD := &TransactionDetailRecord{}
+		err := rows.Scan(&tD.TransactionID, &tD.ProductID, &tD.Qty, &tD.SubTotal)
+		if err != nil {
+			fLog.Errorf("rows.Scan got %s", err.Error())
+		} else {
+			tDetail = append(tDetail, tD)
+		}
+	}
+
+	transaction.TransactionDetail = tDetail
+
+	return transaction, nil
 }
 
 // CreateTransaction insert an entity record of transaction into database.
 func (db *MySQLDB) CreateTransaction(ctx context.Context, rec *TransactionRecord) (string, error) {
 	return "", nil
+}
+
+// GetUserByID retrieves an UserRecord from database where the user id is specified.
+func (db *MySQLDB) GetUserByID(ctx context.Context, userID int) (*UserRecord, error) {
+	fLog := mysqlLog.WithField("func", "GetUserByID")
+	user := &UserRecord{}
+
+	row := db.instance.QueryRowContext(ctx, "SELECT id, name, email, address FROM users WHERE id = ?", userID)
+	err := row.Scan(&user.ID, &user.Name, &user.Email, &user.Address)
+	if err != nil {
+		fLog.Errorf("row.Scan got %s", err.Error())
+		return nil, err
+	}
+
+	return user, nil
 }

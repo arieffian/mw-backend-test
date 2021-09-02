@@ -41,7 +41,7 @@ func (m *MockDBType) GetProductByID(ctx context.Context, productID int) (*Produc
 func (m *MockDBType) GetProductByBrandID(ctx context.Context, brandID int) ([]*ProductRecord, error) {
 	pList := make([]*ProductRecord, 0)
 	args := m.Called(ctx, brandID)
-	return pList, args.Error(2)
+	return pList, args.Error(1)
 }
 
 // GetTransactionByTransactionID retrieves the detail of a transaction from database where the transaction id is specified.
@@ -54,4 +54,10 @@ func (m *MockDBType) GetTransactionByTransactionID(ctx context.Context, transact
 func (m *MockDBType) CreateTransaction(ctx context.Context, rec *TransactionRecord) (string, error) {
 	args := m.Called(ctx, rec)
 	return args.String(0), args.Error(1)
+}
+
+// GetUserByID retrieves an UserRecord from database where the user id is specified.
+func (m *MockDBType) GetUserByID(ctx context.Context, userID int) (*UserRecord, error) {
+	args := m.Called(ctx, userID)
+	return args.Get(0).(*UserRecord), args.Error(1)
 }

@@ -11,7 +11,6 @@ import (
 
 	"github.com/arieffian/mw-backend-test/internal/config"
 	"github.com/arieffian/mw-backend-test/internal/connectors"
-	"github.com/arieffian/mw-backend-test/internal/pkg/http_handlers"
 	helper "github.com/arieffian/mw-backend-test/pkg/helpers"
 
 	log "github.com/sirupsen/logrus"
@@ -25,13 +24,13 @@ var (
 	apiLogger = log.WithField("go", "API")
 
 	// brandHandler http handler for brand routing
-	brandHandler *http_handlers.BrandHandler
+	brandHandler *BrandHandler
 
 	// productHandler http handler for product routing
-	productHandler *http_handlers.ProductHandler
+	productHandler *ProductHandler
 
 	// transactionHandler http handler for transaction routing
-	transactionHandler *http_handlers.TransactionHandler
+	transactionHandler *TransactionHandler
 )
 
 func Start() {
@@ -86,9 +85,9 @@ func InitializeDB() {
 		log.Warnf("Using MYSQL")
 
 		// init repo for token package
-		http_handlers.BrandRepo = connectors.GetMySQLDBInstance()
-		http_handlers.ProductRepo = connectors.GetMySQLDBInstance()
-		http_handlers.TransactionRepo = connectors.GetMySQLDBInstance()
+		BrandRepo = connectors.GetMySQLDBInstance()
+		ProductRepo = connectors.GetMySQLDBInstance()
+		TransactionRepo = connectors.GetMySQLDBInstance()
 	} else {
 		apiLogger.Fatal("unknown database type")
 		panic(fmt.Sprintf("unknown database type %s. Correct your configuration 'db.type' or env-var 'AAA_DB_TYPE'. allowed values are INMEMORY or MYSQL", config.Get("db.type")))
@@ -131,9 +130,9 @@ func configureLogging() {
 func InitializeRouter() {
 	log.Info("Initializing server")
 	Router = http.NewServeMux()
-	brandHandler = &http_handlers.BrandHandler{}
-	productHandler = &http_handlers.ProductHandler{}
-	transactionHandler = &http_handlers.TransactionHandler{}
+	brandHandler = &BrandHandler{}
+	productHandler = &ProductHandler{}
+	transactionHandler = &TransactionHandler{}
 
 	apiRoutes()
 }

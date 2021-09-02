@@ -42,6 +42,8 @@ type TransactionRecord struct {
 	UserID     int
 	Date       time.Time
 	GrandTotal int
+
+	TransactionDetail []*TransactionDetailRecord
 }
 
 // TransactionDetailRecord an entity representative of transaction_detail table
@@ -50,6 +52,11 @@ type TransactionDetailRecord struct {
 	ProductID     int
 	Qty           int
 	SubTotal      int
+}
+
+type UserRepository interface {
+	// GetUserByID retrieves an UserRecord from database where the user id is specified.
+	GetUserByID(ctx context.Context, userID int) (*UserRecord, error)
 }
 
 type BrandRepository interface {
