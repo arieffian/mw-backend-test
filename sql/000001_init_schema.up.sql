@@ -1,20 +1,20 @@
-CREATE TABLE IF NOT EXISTS `users` (
-  `id` INT NOT NULL AUTO_INCREMENT,
+CREATE TABLE `users` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(255) NULL,
   `email` VARCHAR(255) NULL,
   `address` VARCHAR(255) NULL,
   PRIMARY KEY (`id`))
 ENGINE = InnoDB;
 
-CREATE TABLE IF NOT EXISTS `brands` (
-  `id` INT NOT NULL AUTO_INCREMENT,
+CREATE TABLE `brands` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(255) NULL,
   PRIMARY KEY (`id`))
 ENGINE = InnoDB;
 
-CREATE TABLE IF NOT EXISTS `products` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `brand_id` INT NOT NULL,
+CREATE TABLE `products` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `brand_id` INT UNSIGNED NOT NULL,
   `name` VARCHAR(255) NULL,
   `qty` INT NULL,
   `price` BIGINT NULL,
@@ -27,9 +27,9 @@ CREATE TABLE IF NOT EXISTS `products` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
-CREATE TABLE IF NOT EXISTS `transactions` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `user_id` INT NOT NULL,
+CREATE TABLE `transactions` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` INT UNSIGNED NOT NULL,
   `date` DATETIME NULL,
   `grand_total` BIGINT NULL,
   PRIMARY KEY (`id`),
@@ -41,9 +41,9 @@ CREATE TABLE IF NOT EXISTS `transactions` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
-CREATE TABLE IF NOT EXISTS `transaction_detail` (
-  `transaction_id` INT NOT NULL,
-  `product_id` INT NOT NULL,
+CREATE TABLE `transaction_detail` (
+  `transaction_id` INT UNSIGNED NOT NULL,
+  `product_id` INT UNSIGNED NOT NULL,
   `price` BIGINT NULL,
   `qty` INT NULL,
   `sub_total` BIGINT NULL,
