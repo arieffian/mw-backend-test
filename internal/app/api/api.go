@@ -35,13 +35,13 @@ var (
 
 func Start() {
 	configureLogging()
-	log.Infof("Starting User service")
+	log.Infof("Starting api service")
 	InitializeDB()
 	InitializeRouter()
 
 	var wait time.Duration
 
-	address := fmt.Sprintf("%s:%s", config.Get("server.user.host"), config.Get("server.user.port"))
+	address := fmt.Sprintf("%s:%s", config.Get("server.host"), config.Get("server.port"))
 	log.Info("Server binding to ", address)
 
 	srv := &http.Server{

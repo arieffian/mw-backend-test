@@ -403,7 +403,6 @@ func TestGetTransactionByTransactionID(t *testing.T) {
 	})
 }
 
-//TODO: add unit testing
 func TestCreateTransaction(t *testing.T) {
 	t.Run("error-begin-trx", func(t *testing.T) {
 		db, mock, err := sqlmock.New()

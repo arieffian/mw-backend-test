@@ -29,8 +29,8 @@ func initialize() {
 	defCfg["log.max.age"] = "7" //days
 
 	//Configuration api service
-	defCfg["server.user.host"] = "127.0.0.1"
-	defCfg["server.user.port"] = "8080"
+	defCfg["server.host"] = "127.0.0.1"
+	defCfg["server.port"] = "8080"
 	defCfg["server.context.timeout"] = "30" // seconds
 
 	//Configuration db
