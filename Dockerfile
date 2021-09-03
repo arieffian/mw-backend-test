@@ -1,14 +1,16 @@
 #############################
 # builder
 #############################
-FROM golang:1.14.13-buster as builder
+FROM golang:1.16-buster as builder
 LABEL maintainer="https://github.com/arieffian"
 
 ARG BUILD_TYPE
 ENV TYPE=$BUILD_TYPE
 
-ENV GOOS=linux \
-    GOARCH=amd64 
+ENV GO111MODULE=on \
+    GOOS=linux \
+    GOARCH=amd64
+ENV GOPATH /go
 
 WORKDIR /build
 
@@ -43,7 +45,6 @@ RUN apt-get clean && apt-get -y autoremove && \
 
 COPY . .
 
-#RUN go build
 RUN go build -ldflags "-s -w" -o /build/mw-backend-test.app cmd/main.go
 
 #############################
@@ -84,7 +85,6 @@ RUN chown -R appuser:appuser /app/
 USER appuser:appuser
 
 # Bind host from any ip
-ENV SERVER_HOST=0.0.0.0
 EXPOSE 8080
 
 CMD ["sh", "-c", "/app/mw-backend-test.app"]
