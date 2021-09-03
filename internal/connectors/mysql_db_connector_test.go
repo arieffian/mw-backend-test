@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/sirupsen/logrus"
@@ -328,13 +329,186 @@ func TestGetProductByBrandID(t *testing.T) {
 	})
 }
 
-//TODO: add unit testing
 func TestGetTransactionByTransactionID(t *testing.T) {
+	logrus.SetLevel(logrus.TraceLevel)
+	logrus.SetOutput(ioutil.Discard)
 
+	t.Run("error-exec-query-row-context", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		mock.ExpectQuery("SELECT (.+) FROM transactions").WillReturnError(fmt.Errorf("Error DB"))
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
+		// inject sqlmock.DB into MySQLDB
+		mySQL := MySQLDB{
+			instance: db,
+		}
+
+		_, err = mySQL.GetTransactionByTransactionID(context.Background(), 1)
+		if err == nil {
+			t.Error("error should be occurs")
+			t.FailNow()
+		}
+	})
+
+	t.Run("error-not-found", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		mock.ExpectQuery("SELECT (.+) FROM transactions").WillReturnError(sql.ErrNoRows)
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
+		// inject sqlmock.DB into MySQLDB
+		mySQL := MySQLDB{
+			instance: db,
+		}
+
+		_, err = mySQL.GetTransactionByTransactionID(context.Background(), 1)
+		if err == nil {
+			t.Error("error should be occurs")
+			t.FailNow()
+		}
+	})
+
+	t.Run("success", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		rows := sqlmock.NewRows([]string{"id", "user_id", "date", "grand_total"}).
+			AddRow(1, 1, time.Now(), 1000)
+
+		mock.ExpectQuery("SELECT (.+) FROM transactions").WillReturnRows(rows)
+
+		rows = sqlmock.NewRows([]string{"transaction_id", "product_id", "price", "qty", "sub_total"}).
+			AddRow(1, 1, 100, 1, 1000).
+			AddRow(1, 2, 100, 1, 1000).
+			AddRow(1, 2, 100, 1, 1000)
+
+		mock.ExpectQuery("SELECT (.+) FROM transaction_detail").WillReturnRows(rows)
+
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+
+		defer db.Close()
+		// inject sqlmock.DB into MySQLDB
+		mySQL := MySQLDB{
+			instance: db,
+		}
+
+		_, err = mySQL.GetTransactionByTransactionID(context.Background(), 1)
+		if err != nil {
+			t.Error("error shouldnt be occurs")
+			t.FailNow()
+		}
+	})
 }
 
 //TODO: add unit testing
 func TestCreateTransaction(t *testing.T) {
+	t.Run("error-begin-trx", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		mock.ExpectBegin().WillReturnError(fmt.Errorf("Transaction Error"))
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
+		// inject sqlmock.DB into MySQLDB
+		mySQL := MySQLDB{
+			instance: db,
+		}
+		_, err = mySQL.CreateTransaction(context.Background(), &TransactionRecord{})
+		if err == nil {
+			t.Error("error should be occurs")
+			t.FailNow()
+		}
+	})
+
+	t.Run("error-create-transaction-record", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		mock.ExpectBegin()
+		mock.ExpectExec("INSERT INTO transactions").WillReturnError(fmt.Errorf("Create Transaction Error"))
+
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
+		// inject sqlmock.DB into MySQLDB
+		mySQL := MySQLDB{
+			instance: db,
+		}
+		_, err = mySQL.CreateTransaction(context.Background(), &TransactionRecord{})
+		if err == nil {
+			t.Error("error should be occurs")
+			t.FailNow()
+		}
+	})
+
+	t.Run("error-last-inserted-id", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		mock.ExpectBegin()
+		mock.ExpectExec("INSERT INTO transactions").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("error LastInsertedID")))
+		mock.ExpectRollback()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
+		// inject sqlmock.DB into MySQLDB
+		mySQL := MySQLDB{
+			instance: db,
+		}
+
+		_, err = mySQL.CreateTransaction(context.Background(), &TransactionRecord{})
+		if err == nil {
+			t.Error("error should be occurs")
+			t.FailNow()
+		}
+	})
+
+	t.Run("success", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		mock.ExpectBegin()
+		mock.ExpectExec("INSERT INTO transactions").WillReturnResult(sqlmock.NewResult(12, 1))
+
+		rows := sqlmock.NewRows([]string{"id", "product_id", "name", "qty", "price"}).AddRow(1, 1, "name", 1, 1000)
+		mock.ExpectQuery("SELECT (.+) FROM products").WillReturnRows(rows)
+
+		mock.ExpectExec("UPDATE products").WillReturnResult(sqlmock.NewResult(12, 1))
+
+		mock.ExpectExec("INSERT INTO transaction_detail").WillReturnResult(sqlmock.NewResult(12, 1))
+
+		mock.ExpectExec("UPDATE transactions").WillReturnResult(sqlmock.NewResult(12, 1))
+
+		mock.ExpectCommit()
+
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+
+		defer db.Close()
+		// inject sqlmock.DB into MySQLDB
+		mySQL := MySQLDB{
+			instance: db,
+		}
+
+		var det []*TransactionDetailRecord
+
+		det = append(det, &TransactionDetailRecord{
+			ProductID: 1,
+			Qty:       1,
+		})
+
+		rec := &TransactionRecord{
+			UserID:            1,
+			Date:              time.Now(),
+			TransactionDetail: det,
+		}
+
+		_, err = mySQL.CreateTransaction(context.Background(), rec)
+		if err != nil {
+			t.Error("error shouldnt be occurs")
+			t.FailNow()
+		}
+	})
 
 }
 
