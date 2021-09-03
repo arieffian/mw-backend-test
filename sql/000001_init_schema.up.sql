@@ -16,8 +16,8 @@ CREATE TABLE `products` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `brand_id` INT UNSIGNED NOT NULL,
   `name` VARCHAR(255) NULL,
-  `qty` INT NULL,
-  `price` BIGINT NULL,
+  `qty` INT UNSIGNED NULL,
+  `price` BIGINT UNSIGNED NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_products_brands_idx` (`brand_id` ASC),
   CONSTRAINT `fk_products_brands`
@@ -31,7 +31,7 @@ CREATE TABLE `transactions` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `user_id` INT UNSIGNED NOT NULL,
   `date` DATETIME NULL,
-  `grand_total` BIGINT NULL,
+  `grand_total` BIGINT UNSIGNED NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_transaction_users1_idx` (`user_id` ASC),
   CONSTRAINT `fk_transaction_users1`
@@ -44,9 +44,9 @@ ENGINE = InnoDB;
 CREATE TABLE `transaction_detail` (
   `transaction_id` INT UNSIGNED NOT NULL,
   `product_id` INT UNSIGNED NOT NULL,
-  `price` BIGINT NULL,
-  `qty` INT NULL,
-  `sub_total` BIGINT NULL,
+  `price` BIGINT UNSIGNED NULL,
+  `qty` INT UNSIGNED NULL,
+  `sub_total` BIGINT UNSIGNED NULL,
   INDEX `fk_transaction_detail_transaction1_idx` (`transaction_id` ASC),
   INDEX `fk_transaction_detail_products1_idx` (`product_id` ASC),
   CONSTRAINT `fk_transaction_detail_transaction1`

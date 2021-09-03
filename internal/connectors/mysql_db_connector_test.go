@@ -328,10 +328,12 @@ func TestGetProductByBrandID(t *testing.T) {
 	})
 }
 
+//TODO: add unit testing
 func TestGetTransactionByTransactionID(t *testing.T) {
 
 }
 
+//TODO: add unit testing
 func TestCreateTransaction(t *testing.T) {
 
 }

@@ -88,6 +88,7 @@ func InitializeDB() {
 		BrandRepo = connectors.GetMySQLDBInstance()
 		ProductRepo = connectors.GetMySQLDBInstance()
 		TransactionRepo = connectors.GetMySQLDBInstance()
+		UserRepo = connectors.GetMySQLDBInstance()
 	} else {
 		apiLogger.Fatal("unknown database type")
 		panic(fmt.Sprintf("unknown database type %s. Correct your configuration 'db.type' or env-var 'AAA_DB_TYPE'. allowed values are INMEMORY or MYSQL", config.Get("db.type")))

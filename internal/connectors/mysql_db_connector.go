@@ -154,7 +154,121 @@ func (db *MySQLDB) GetTransactionByTransactionID(ctx context.Context, transactio
 
 // CreateTransaction insert an entity record of transaction into database.
 func (db *MySQLDB) CreateTransaction(ctx context.Context, rec *TransactionRecord) (string, error) {
-	return "", nil
+	fLog := mysqlLog.WithField("func", "CreateTransaction")
+
+	// start db transaction
+	tx, err := db.instance.BeginTx(ctx, nil)
+	if err != nil {
+		fLog.Errorf("db.instance.BeginTx got %s", err.Error())
+		return "", err
+	}
+
+	// create transaction record
+	trans, err := tx.ExecContext(ctx, "INSERT INTO transactions(user_id, date, grand_total) VALUES(?,?,?)", rec.UserID, rec.Date, 0)
+	if err != nil {
+		fLog.Errorf("db.tx.ExecContext got %s", err.Error())
+		errRollback := tx.Rollback()
+		if errRollback != nil {
+			fLog.Errorf("error rollback, got %s", err.Error())
+			return "", errRollback
+		}
+		return "", err
+	}
+
+	tID, err := trans.LastInsertId()
+	if err != nil {
+		fLog.Errorf("db.tx.ExecContext got %s", err.Error())
+		errRollback := tx.Rollback()
+		if errRollback != nil {
+			fLog.Errorf("error rollback, got %s", err.Error())
+			return "", errRollback
+		}
+		return "", err
+	}
+
+	grandTotal := 0
+
+	//loop tx detail
+	for i := 0; i < len(rec.TransactionDetail); i++ {
+		detail := rec.TransactionDetail[i]
+
+		//get product stock from products table
+		p, err := db.GetProductByID(ctx, detail.ProductID)
+		if err != nil {
+			fLog.Errorf("db.tx.ExecContext got %s", err.Error())
+			errRollback := tx.Rollback()
+			if errRollback != nil {
+				fLog.Errorf("error rollback, got %s", err.Error())
+				return "", errRollback
+			}
+			return "", err
+		}
+
+		//check qty
+		if p.Qty-detail.Qty < 0 {
+			fLog.Errorf("product qty is not enough")
+			errRollback := tx.Rollback()
+			if errRollback != nil {
+				fLog.Errorf("error rollback, got %s", err.Error())
+				return "", errRollback
+			}
+			return "", fmt.Errorf("product qty is not enough")
+		}
+
+		qty := p.Qty - detail.Qty
+		subTotal := p.Price * detail.Qty
+		grandTotal = grandTotal + subTotal
+
+		//update qty from products table
+		_, err = tx.ExecContext(ctx, "UPDATE products SET qty=? WHERE id=?", qty, detail.ProductID)
+		if err != nil {
+			fLog.Errorf("db.tx.ExecContext got %s", err.Error())
+			errRollback := tx.Rollback()
+			if errRollback != nil {
+				fLog.Errorf("error rollback, got %s", err.Error())
+				return "", errRollback
+			}
+			return "", err
+		}
+
+		//insert transaction detail
+		_, err = tx.ExecContext(ctx, "INSERT INTO transaction_detail(transaction_id, product_id, price, qty, sub_total) VALUES(?,?,?,?,?)", tID, detail.ProductID, p.Price, detail.Qty, subTotal)
+		if err != nil {
+			fLog.Errorf("db.tx.ExecContext got %s", err.Error())
+			errRollback := tx.Rollback()
+			if errRollback != nil {
+				fLog.Errorf("error rollback, got %s", err.Error())
+				return "", errRollback
+			}
+			return "", err
+		}
+	}
+
+	// update transaction grand total
+	_, err = tx.ExecContext(ctx, "UPDATE transactions SET grand_total=? WHERE id=?", grandTotal, tID)
+	if err != nil {
+		fLog.Errorf("db.tx.ExecContext got %s", err.Error())
+		errRollback := tx.Rollback()
+		if errRollback != nil {
+			fLog.Errorf("error rollback, got %s", err.Error())
+			return "", errRollback
+		}
+		return "", err
+	}
+
+	// commit transaction
+	err = tx.Commit()
+	if err != nil {
+		fLog.Errorf("db.tx.ExecContext got %s", err.Error())
+		errRollback := tx.Rollback()
+		if errRollback != nil {
+			fLog.Errorf("error rollback, got %s", err.Error())
+			return "", errRollback
+		}
+		return "", err
+	}
+
+	return "transaction created successfully", nil
 }
 
 // GetUserByID retrieves an UserRecord from database where the user id is specified.

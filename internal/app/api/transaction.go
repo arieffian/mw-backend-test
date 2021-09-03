@@ -21,17 +21,13 @@ var (
 )
 
 type transactionRequest struct {
-	UserID     int                        `json:"user_id" validate:"required,numeric,gt=0"`
-	Date       time.Time                  `json:"date" validate:"required,datetime"`
-	Detail     []trasanctionDetailRequest `json:"detail" validate:"required"`
-	GrandTotal int                        `json:"grandtotal" validate:"required,numeric,gte=0"`
+	UserID int                        `json:"user_id" validate:"required,numeric,gt=0"`
+	Detail []trasanctionDetailRequest `json:"detail" validate:"required"`
 }
 
 type trasanctionDetailRequest struct {
 	ProductID int `json:"product_id" validate:"required,numeric,gt=0"`
-	Price     int `json:"price" validate:"required,numeric,gt=0"`
 	Qty       int `json:"qty" validate:"required,numeric,gt=0"`
-	SubTotal  int `json:"subtotal" validate:"required,numeric,gte=0"`
 }
 
 func (t *TransactionHandler) TransactionHttpHandler(w http.ResponseWriter, r *http.Request) {
@@ -76,13 +72,35 @@ func (t *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	//validate brand id exists
-	// _, err = BrandRepo.GetBrandByID(r.Context(), product.BrandID)
-	// if err != nil {
-	// 	helpers.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, "Brand ID not found", nil, nil, nil)
-	// 	return
-	// }
-	helpers.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Create Product", nil, nil, nil)
+	// validate user id exists
+	_, err = UserRepo.GetUserByID(r.Context(), transaction.UserID)
+	if err != nil {
+		helpers.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, "User ID not found", nil, nil, nil)
+		return
+	}
+
+	trans := &connectors.TransactionRecord{
+		UserID: transaction.UserID,
+		Date:   time.Now(),
+	}
+
+	detail := []*connectors.TransactionDetailRecord{}
+	for i := 0; i < len(transaction.Detail); i++ {
+		detail = append(detail, &connectors.TransactionDetailRecord{
+			ProductID: transaction.Detail[i].ProductID,
+			Qty:       transaction.Detail[i].Qty,
+		})
+	}
+
+	trans.TransactionDetail = detail
+
+	_, err = TransactionRepo.CreateTransaction(r.Context(), trans)
+	if err != nil {
+		helpers.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, "User ID not found", nil, nil, nil)
+		return
+	}
+
+	helpers.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Success", nil, nil, nil)
 }
 
 func (t *TransactionHandler) GetTransactionByID(w http.ResponseWriter, r *http.Request) {

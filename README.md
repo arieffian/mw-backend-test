@@ -92,3 +92,11 @@ $ curl -X POST -H 'content-type: application/json' --data '{"brand_id": 4, "name
 ```bash
 $ curl http://localhost:8080/product/brand?id=1
 ``` 
+
+```bash
+$ curl -X POST -H 'content-type: application/json' --data '{"user_id": 1,"detail": [{"product_id": 1,"qty": 1},{"product_id": 2,"qty": 1},{"product_id": 3,"qty": 1}]}' http://localhost:8080/order
+``` 
+
+```bash
+$ curl http://localhost:8080/order?id=1
+``` 
