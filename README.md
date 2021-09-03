@@ -53,13 +53,13 @@ $ cd mw-backend-test
 $ docker-compose up
 ```
 
-**Step 2 Run Migration**
+**Step 3 Run Migration**
 
 ```bash
 $ migrate -database mysql://mw-backend:mw-backend@/mw-backend -path ./sql up
 ```
 
-**Step 3 Calling APIs**
+**Step 4 Calling APIs**
 
 Create Brand
 ```bash
