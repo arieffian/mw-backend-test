@@ -86,6 +86,12 @@ func (t *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Re
 
 	detail := []*connectors.TransactionDetailRecord{}
 	for i := 0; i < len(transaction.Detail); i++ {
+		// validate product id exists
+		_, err = ProductRepo.GetProductByID(r.Context(), transaction.Detail[i].ProductID)
+		if err != nil {
+			helpers.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, "Product ID not found", nil, nil, nil)
+			return
+		}
 		detail = append(detail, &connectors.TransactionDetailRecord{
 			ProductID: transaction.Detail[i].ProductID,
 			Qty:       transaction.Detail[i].Qty,
@@ -96,7 +102,7 @@ func (t *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Re
 
 	_, err = TransactionRepo.CreateTransaction(r.Context(), trans)
 	if err != nil {
-		helpers.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, "User ID not found", nil, nil, nil)
+		helpers.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, "Internal Server Error", nil, nil, nil)
 		return
 	}
 

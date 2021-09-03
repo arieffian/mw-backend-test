@@ -84,7 +84,7 @@ func InitializeDB() {
 	if config.Get("db.type") == "mysql" {
 		log.Warnf("Using MYSQL")
 
-		// init repo for token package
+		// init repo
 		BrandRepo = connectors.GetMySQLDBInstance()
 		ProductRepo = connectors.GetMySQLDBInstance()
 		TransactionRepo = connectors.GetMySQLDBInstance()
